@@ -1,0 +1,603 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111318">
+<title>OTXS Currency — Currency Converter</title>
+<meta name="description" content="Convert currencies using exchange rates, view update dates, and export conversion history with OTXS Currency.">
+<style>
+:root{
+  --bg:#111318;--panel:#191c23;--panel2:#20242d;--border:#303541;
+  --text:#f4f5f7;--muted:#a4aab7;--orange:#ff9d32;--yellow:#ffd166;
+  --green:#56d6a0;--red:#ff7777;--radius:17px
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+header{padding:18px max(18px,calc((100% - 1080px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:19px;font-weight:900;color:#171717;background:linear-gradient(135deg,var(--yellow),var(--orange))}
+.brand-name{font-weight:850;letter-spacing:.7px}
+.brand-sub{font-size:12px;color:var(--muted)}
+.header-link{color:var(--muted);text-decoration:none;font-size:13px}
+main{max-width:1080px;margin:auto;padding:30px 18px 60px}
+.eyebrow{font-size:12px;letter-spacing:1.6px;font-weight:800;color:var(--orange);text-transform:uppercase}
+h1{font-size:clamp(30px,4vw,44px);line-height:1.12;letter-spacing:-1.4px;margin:8px 0}
+h2{font-size:17px;margin:0 0 16px}
+p{margin-top:0}
+.muted{color:var(--muted)}
+.hero{margin-bottom:25px}
+.hero p{max-width:640px;margin-bottom:0}
+.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:18px;align-items:start}
+.stack{display:grid;gap:18px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px;min-width:0}
+.field{margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:750;color:var(--muted);margin-bottom:6px}
+input,select{width:100%;min-width:0;background:#11141a;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:12px}
+input::placeholder{color:#777e8c}
+.row{display:flex;gap:12px;align-items:flex-end}
+.row>*{flex:1;min-width:0}
+.amount-input{font-size:23px;font-weight:800;letter-spacing:-.5px}
+.btn{border:1px solid var(--border);border-radius:10px;padding:10px 14px;background:var(--panel2);color:var(--text);font-weight:750}
+.btn:hover{filter:brightness(1.12)}
+.btn-primary{background:linear-gradient(135deg,var(--yellow),var(--orange));color:#181818;border-color:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.full{width:100%}
+.swap-row{display:flex;justify-content:center;margin:-3px 0 12px}
+.swap-btn{width:43px;height:43px;border-radius:50%;border:1px solid #6d522f;background:#35291c;color:var(--yellow);font-size:22px}
+.quick-label{font-size:12px;color:var(--muted);font-weight:700;margin:14px 0 8px}
+.quick-amounts{display:flex;flex-wrap:wrap;gap:7px}
+.quick-amounts button{padding:7px 12px;border-radius:9px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:750}
+.quick-amounts button:hover,.quick-amounts button.active{color:var(--yellow);border-color:#785124;background:#35291c}
+.result-card{background:linear-gradient(145deg,#211e18,#191c23 70%);border-color:#55432b}
+.result-label{font-size:12px;color:var(--muted);font-weight:750}
+.result-value{font-size:clamp(27px,4vw,40px);font-weight:900;letter-spacing:-1px;line-height:1.25;overflow-wrap:anywhere;margin:9px 0}
+.result-pair{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.rate-box{border:1px solid var(--border);border-radius:12px;padding:13px;margin-top:18px}
+.rate-line{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin:5px 0}
+.rate-line span:first-child{color:var(--muted)}
+.status{font-size:12px;margin-top:11px;min-height:18px;color:var(--muted)}
+.status.error{color:var(--red)}
+.status.success{color:var(--green)}
+.status.warning{color:var(--yellow)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px}
+.dot.loading{background:var(--yellow)}
+.dot.error{background:var(--red)}
+.history-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.history-head h2{margin:0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td:last-child,th:last-child{text-align:right}
+.empty{text-align:center;color:var(--muted);padding:24px 12px;border:1px dashed #424855;border-radius:12px;font-size:13px}
+.small{font-size:12px}
+.disclaimer{font-size:12px;color:var(--muted);margin-top:12px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding-top:28px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.result-card{order:-1}}
+@media(max-width:500px){header{align-items:flex-start}.header-link{display:none}main{padding:23px 12px 42px}.card{padding:16px}.row{gap:8px}.amount-input{font-size:20px}.history-head{align-items:flex-start;flex-direction:column}}
+@media print{header,.hero,.no-print,footer{display:none!important}body{background:white;color:black}.layout{display:block}.card{background:white;color:black;border-color:#ccc;margin-bottom:15px}.result-card{background:white}.result-value{font-size:30px}.muted,.result-pair,.result-label{color:#333}.rate-box{border-color:#ccc}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">₹↔</div>
+    <div>
+      <div class="brand-name">OTXS <span style="color:var(--orange)">CURRENCY</span></div>
+      <div class="brand-sub">Know the rate. Plan with confidence.</div>
+    </div>
+  </div>
+  <a class="header-link" href="https://otxs.de">OTXS · Discover and Explore ↗</a>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="eyebrow">OTXS · Everyday tools</div>
+    <h1>Currency conversion,<br><span style="color:var(--orange)">made simple.</span></h1>
+    <p class="muted">Convert currencies, check the latest available reference rates, and keep a record of your calculations.</p>
+  </section>
+
+  <div class="layout">
+    <div class="stack">
+      <section class="card">
+        <h2>Convert currencies</h2>
+        <div class="field">
+          <label for="amount">Amount to convert</label>
+          <input class="amount-input" id="amount" type="number" min="0" max="1000000000000" step="any" value="100" inputmode="decimal">
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="fromCurrency">From</label>
+            <select id="fromCurrency">
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="NPR">NPR — Nepalese Rupee</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="JPY">JPY — Japanese Yen</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="CNY">CNY — Chinese Yuan</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="BDT">BDT — Bangladeshi Taka</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+              <option value="ZAR">ZAR — South African Rand</option>
+              <option value="BRL">BRL — Brazilian Real</option>
+              <option value="TRY">TRY — Turkish Lira</option>
+              <option value="KRW">KRW — South Korean Won</option>
+              <option value="HKD">HKD — Hong Kong Dollar</option>
+              <option value="MXN">MXN — Mexican Peso</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="toCurrency">To</label>
+            <select id="toCurrency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="NPR">NPR — Nepalese Rupee</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="JPY">JPY — Japanese Yen</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="CNY">CNY — Chinese Yuan</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="BDT">BDT — Bangladeshi Taka</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+              <option value="ZAR">ZAR — South African Rand</option>
+              <option value="BRL">BRL — Brazilian Real</option>
+              <option value="TRY">TRY — Turkish Lira</option>
+              <option value="KRW">KRW — South Korean Won</option>
+              <option value="HKD">HKD — Hong Kong Dollar</option>
+              <option value="MXN">MXN — Mexican Peso</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="swap-row">
+          <button type="button" id="swapBtn" class="swap-btn" title="Swap currencies" aria-label="Swap currencies">⇅</button>
+        </div>
+
+        <div class="quick-label">Quick amounts</div>
+        <div class="quick-amounts" id="quickAmounts">
+          <button type="button" data-amount="10">10</button>
+          <button type="button" data-amount="50">50</button>
+          <button type="button" data-amount="100" class="active">100</button>
+          <button type="button" data-amount="500">500</button>
+          <button type="button" data-amount="1000">1,000</button>
+          <button type="button" data-amount="5000">5,000</button>
+        </div>
+
+        <button class="btn btn-primary full" id="convertBtn" style="margin-top:19px">Convert now</button>
+        <div class="status" id="rateStatus" role="status" aria-live="polite"><span class="dot loading"></span>Rates have not been loaded yet.</div>
+      </section>
+
+      <section class="card">
+        <div class="history-head">
+          <h2>Recent conversions</h2>
+          <div class="row no-print" style="flex:0 0 auto">
+            <button class="btn" id="exportBtn">Export CSV</button>
+            <button class="btn" id="clearHistoryBtn">Clear</button>
+          </div>
+        </div>
+        <div id="historyArea"></div>
+        <p class="disclaimer">History is stored locally in this browser. It is not synced between devices.</p>
+      </section>
+    </div>
+
+    <aside class="stack">
+      <section class="card result-card">
+        <div class="result-label">Converted amount</div>
+        <div class="result-value" id="resultValue">—</div>
+        <div class="result-pair" id="resultPair">Choose currencies and convert.</div>
+        <div class="rate-box">
+          <div class="rate-line"><span>Exchange rate</span><strong id="rateValue">—</strong></div>
+          <div class="rate-line"><span>Rate date</span><strong id="rateDate">Not loaded</strong></div>
+          <div class="rate-line"><span>Rate source</span><strong>ExchangeRate-API</strong></div>
+        </div>
+        <button class="btn full no-print" id="copyBtn" style="margin-top:15px" disabled>Copy result</button>
+        <div class="status" id="resultStatus" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <h2>About exchange rates</h2>
+        <p class="muted small">This tool uses reference exchange rates provided by a public exchange-rate service. Rates may not be real-time market quotes and may differ from bank, card-network, remittance, or cash-exchange rates.</p>
+        <p class="muted small">Fees, commissions, and provider margins are not included in the calculation.</p>
+        <button class="btn full no-print" id="refreshBtn">↻ Refresh exchange rates</button>
+        <div class="status" id="refreshStatus"></div>
+      </section>
+    </aside>
+  </div>
+  <footer>OTXS Currency · Discover and Explore · Reference rates only</footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const HISTORY_KEY = "otxs_currency_history_v1";
+  const CACHE_PREFIX = "otxs_currency_rates_v1_";
+  const API = "https://open.er-api.com/v6/latest/";
+  const MAX_HISTORY = 100;
+
+  let rates = {};
+  let baseCurrency = "";
+  let rateUpdatedAt = "";
+  let rateRetrievedAt = "";
+  let currentResult = null;
+  let requestController = null;
+  let requestId = 0;
+  let history = loadHistory();
+
+  function loadHistory() {
+    try {
+      const data = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+      return Array.isArray(data) ? data.slice(0, MAX_HISTORY) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory() {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch {
+      setStatus("resultStatus", "Browser storage is unavailable; this conversion may not persist.", "warning");
+    }
+  }
+
+  function setStatus(id, message, type = "") {
+    const el = $(id);
+    el.className = "status" + (type ? " " + type : "");
+    el.textContent = message;
+  }
+
+  function setRateStatus(message, type = "") {
+    const el = $("rateStatus");
+    el.className = "status" + (type ? " " + type : "");
+    const dot = document.createElement("span");
+    dot.className = "dot " + (type === "error" ? "error" : type === "success" ? "" : "loading");
+    el.replaceChildren(dot, document.createTextNode(message));
+  }
+
+  function numberFormat(value, maximumFractionDigits = 6) {
+    return new Intl.NumberFormat(undefined, {
+      maximumFractionDigits,
+      minimumFractionDigits: 0
+    }).format(value);
+  }
+
+  function currencyFormat(value, currency) {
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 4
+      }).format(value);
+    } catch {
+      return currency + " " + numberFormat(value, 4);
+    }
+  }
+
+  function rateDateText() {
+    if (!rateUpdatedAt) return "Not available";
+    const d = new Date(rateUpdatedAt + "T12:00:00Z");
+    if (Number.isNaN(d.getTime())) return rateUpdatedAt;
+    return d.toLocaleDateString(undefined, {year:"numeric",month:"short",day:"numeric",timeZone:"UTC"});
+  }
+
+  function setResultPlaceholder() {
+    $("resultValue").textContent = "—";
+    $("resultPair").textContent = "Choose currencies and convert.";
+    $("rateValue").textContent = "—";
+    $("rateDate").textContent = "Not loaded";
+    $("copyBtn").disabled = true;
+    currentResult = null;
+  }
+
+  function readCache(base) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(CACHE_PREFIX + base) || "null");
+      if (cached && cached.rates && typeof cached.rates === "object") return cached;
+    } catch {}
+    return null;
+  }
+
+  function saveCache(base, data) {
+    try {
+      localStorage.setItem(CACHE_PREFIX + base, JSON.stringify(data));
+    } catch {}
+  }
+
+  async function fetchRates(base, force = false) {
+    if (requestController) requestController.abort();
+    requestController = new AbortController();
+    const thisRequest = ++requestId;
+
+    setRateStatus("Fetching " + base + " reference rates…");
+    setStatus("refreshStatus", "Connecting to exchange-rate service…");
+
+    if (!force) {
+      const cached = readCache(base);
+      if (cached && cached.rates && cached.rates[base] === 1) {
+        // Keep cache available as a fallback if network access fails.
+        rates = cached.rates;
+        baseCurrency = base;
+        rateUpdatedAt = cached.date || "";
+        rateRetrievedAt = cached.retrievedAt || "";
+      }
+    }
+
+    try {
+      const response = await fetch(API + encodeURIComponent(base), {
+        signal:requestController.signal,
+        cache:"no-store"
+      });
+      if (!response.ok) throw new Error("Exchange-rate service returned HTTP " + response.status + ".");
+      const data = await response.json();
+      if (thisRequest !== requestId) return false;
+
+      if (data.result !== "success" || !data.rates || data.base_code !== base) {
+        throw new Error("The exchange-rate service returned an invalid response.");
+      }
+
+      rates = data.rates;
+      baseCurrency = base;
+      rateUpdatedAt = data.time_last_update_utc
+        ? data.time_last_update_utc.slice(0, 16)
+        : (data.time_last_update_unix ? new Date(data.time_last_update_unix * 1000).toISOString().slice(0, 10) : "");
+      // Prefer the provider's explicit date field when available.
+      if (data.time_last_update_utc) {
+        const parsed = new Date(data.time_last_update_utc);
+        if (!Number.isNaN(parsed.getTime())) rateUpdatedAt = parsed.toISOString().slice(0,10);
+      }
+      rateRetrievedAt = new Date().toISOString();
+
+      saveCache(base, {
+        rates,
+        date:rateUpdatedAt,
+        retrievedAt:rateRetrievedAt
+      });
+
+      setRateStatus("Reference rates loaded for " + base + ".", "success");
+      setStatus("refreshStatus", "Rates successfully refreshed.", "success");
+      return true;
+    } catch (error) {
+      if (error.name === "AbortError") return false;
+      if (thisRequest !== requestId) return false;
+
+      const cached = readCache(base);
+      if (cached && cached.rates && cached.rates[base] === 1) {
+        rates = cached.rates;
+        baseCurrency = base;
+        rateUpdatedAt = cached.date || "";
+        rateRetrievedAt = cached.retrievedAt || "";
+        setRateStatus("Offline: using saved rates from " + (rateDateText() || "an earlier date") + ".", "warning");
+        setStatus("refreshStatus", "Could not refresh. A saved rate set is available; check its date.", "warning");
+        return true;
+      }
+
+      rates = {};
+      baseCurrency = "";
+      rateUpdatedAt = "";
+      rateRetrievedAt = "";
+      setRateStatus("Unable to load rates. Check your connection and retry.", "error");
+      setStatus("refreshStatus", error.message || "Rate request failed.", "error");
+      return false;
+    }
+  }
+
+  async function ensureRates(base, force = false) {
+    if (!force && baseCurrency === base && rates[base] === 1) return true;
+    return fetchRates(base, force);
+  }
+
+  function calculateFromRates(amount, from, to) {
+    if (from === to) return amount;
+    if (baseCurrency === from && Number.isFinite(rates[to])) {
+      return amount * rates[to];
+    }
+    if (baseCurrency === to && Number.isFinite(rates[from]) && rates[from] !== 0) {
+      return amount / rates[from];
+    }
+    throw new Error("The required exchange rate is unavailable.");
+  }
+
+  async function convert(forceRefresh = false) {
+    const amount = Number($("amount").value);
+    const from = $("fromCurrency").value;
+    const to = $("toCurrency").value;
+
+    if (!Number.isFinite(amount) || amount < 0 || amount > 1e12) {
+      setStatus("resultStatus", "Enter a valid amount between 0 and 1,000,000,000,000.", "error");
+      return;
+    }
+
+    $("convertBtn").disabled = true;
+    $("convertBtn").textContent = "Converting…";
+    setStatus("resultStatus", "Getting the exchange rate…");
+
+    try {
+      let ok = true;
+      if (from !== to) ok = await ensureRates(from, forceRefresh);
+      if (!ok) throw new Error("No exchange rate is currently available. Please try again.");
+
+      let result;
+      if (from === to) {
+        result = amount;
+        rateUpdatedAt = rateUpdatedAt || new Date().toISOString().slice(0,10);
+      } else {
+        result = calculateFromRates(amount, from, to);
+      }
+
+      if (!Number.isFinite(result)) throw new Error("Could not calculate this conversion.");
+
+      currentResult = {
+        amount, from, to, result,
+        rate: from === to ? 1 : result / (amount || 1),
+        date: rateUpdatedAt,
+        retrievedAt: rateRetrievedAt || new Date().toISOString()
+      };
+
+      renderResult(currentResult);
+      const record = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+        ...currentResult,
+        createdAt:new Date().toISOString()
+      };
+      history.unshift(record);
+      history = history.slice(0, MAX_HISTORY);
+      saveHistory();
+      renderHistory();
+      setStatus("resultStatus", "Conversion complete. Reference rates only.", "success");
+    } catch (error) {
+      setStatus("resultStatus", error.message || "Conversion failed.", "error");
+    } finally {
+      $("convertBtn").disabled = false;
+      $("convertBtn").textContent = "Convert now";
+    }
+  }
+
+  function renderResult(result) {
+    $("resultValue").textContent = currencyFormat(result.result, result.to);
+    $("resultPair").textContent = currencyFormat(result.amount, result.from) + " = " + currencyFormat(result.result, result.to);
+    $("rateValue").textContent = "1 " + result.from + " = " + numberFormat(result.rate, 8) + " " + result.to;
+    $("rateDate").textContent = result.date || "Not provided";
+    $("copyBtn").disabled = false;
+  }
+
+  function renderHistory() {
+    const area = $("historyArea");
+    if (!history.length) {
+      area.innerHTML = '<div class="empty">No conversions yet. Your recent calculations will appear here.</div>';
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "table-wrap";
+    const table = document.createElement("table");
+    table.innerHTML = "<thead><tr><th>Conversion</th><th>Result</th><th>Date</th></tr></thead>";
+    const tbody = document.createElement("tbody");
+
+    history.slice(0, 25).forEach(item => {
+      const tr = document.createElement("tr");
+      const conversion = document.createElement("td");
+      conversion.textContent = numberFormat(item.amount, 6) + " " + item.from + " → " + item.to;
+      const result = document.createElement("td");
+      result.textContent = currencyFormat(item.result, item.to);
+      const date = document.createElement("td");
+      const parsed = new Date(item.createdAt);
+      date.textContent = Number.isNaN(parsed.getTime()) ? "" : parsed.toLocaleDateString();
+      tr.append(conversion,result,date);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    area.replaceChildren(wrapper);
+  }
+
+  async function swapCurrencies() {
+    const from = $("fromCurrency");
+    const to = $("toCurrency");
+    const oldFrom = from.value;
+    from.value = to.value;
+    to.value = oldFrom;
+    await convert();
+  }
+
+  function downloadCSV() {
+    if (!history.length) {
+      setStatus("resultStatus", "There is no conversion history to export.", "warning");
+      return;
+    }
+    const rows = [
+      ["Timestamp","Amount","From Currency","Converted Amount","To Currency","Rate","Rate Date"]
+    ];
+    history.forEach(h => rows.push([
+      h.createdAt,h.amount,h.from,h.result,h.to,h.rate,h.date
+    ]));
+    const csv = rows.map(row => row.map(v => '"' + String(v ?? "").replace(/"/g,'""') + '"').join(",")).join("\r\n");
+    const blob = new Blob(["\uFEFF" + csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "otxs-currency-history.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  $("convertBtn").addEventListener("click", () => convert());
+  $("swapBtn").addEventListener("click", swapCurrencies);
+  $("refreshBtn").addEventListener("click", async () => {
+    const from = $("fromCurrency").value;
+    const ok = await fetchRates(from, true);
+    if (ok) await convert();
+  });
+  $("exportBtn").addEventListener("click", downloadCSV);
+  $("clearHistoryBtn").addEventListener("click", () => {
+    if (!history.length) return;
+    if (!confirm("Clear your conversion history from this browser?")) return;
+    history = [];
+    saveHistory();
+    renderHistory();
+  });
+
+  $("copyBtn").addEventListener("click", async () => {
+    if (!currentResult) return;
+    const text = currencyFormat(currentResult.amount,currentResult.from) + " = " +
+      currencyFormat(currentResult.result,currentResult.to) +
+      " (rate date: " + (currentResult.date || "not provided") + ")";
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus("resultStatus", "Conversion result copied.", "success");
+    } catch {
+      setStatus("resultStatus", "Clipboard access was unavailable. You can copy the result manually.", "warning");
+    }
+  });
+
+  $("quickAmounts").addEventListener("click", event => {
+    const button = event.target.closest("[data-amount]");
+    if (!button) return;
+    $("amount").value = button.dataset.amount;
+    document.querySelectorAll("[data-amount]").forEach(b => b.classList.toggle("active", b === button));
+    convert();
+  });
+
+  ["fromCurrency","toCurrency"].forEach(id => {
+    $(id).addEventListener("change", () => convert());
+  });
+  $("amount").addEventListener("keydown", event => {
+    if (event.key === "Enter") convert();
+  });
+
+  renderHistory();
+  setResultPlaceholder();
+  convert();
+})();
+</script>
+</body>
+</html>
+
